@@ -1,11 +1,69 @@
-import React from "react";
-import { useNavigation } from "@react-navigation/native";
-import { View, StyleSheet, Text, TouchableOpacity } from "react-native";
+import React, { useCallback, useState } from "react";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import {
+  View,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+} from "react-native";
+import TodayCalories from "../components/TodayCalories";
+import TodayMeals from "../components/TodayMeals";
 import Header from "../components/Header";
 import { Icon } from "@rneui/themed";
+import useFoodStorage from "../hooks/useFoodStorage";
+
+const TotalCaloriesPerDay = 2000;
 
 const Home = () => {
+  const [todayFood, setTodayFood] = useState([]);
+  const [todayStatistics, setTodayStatistics] = useState({
+    consumed: 0,
+    percentage: 0,
+    remaining: 0,
+    total: TotalCaloriesPerDay,
+  });
+  const { onGetTodayFood } = useFoodStorage();
   const { navigate } = useNavigation();
+
+  const calculateTodayStatistics = (meals) => {
+    try {
+      const caloriesConsumed = meals.reduce(
+        (acum, current) => acum + Number(current.calories),
+        0
+      );
+      const remainingCalories = TotalCaloriesPerDay - caloriesConsumed;
+      const percentage = (caloriesConsumed / TotalCaloriesPerDay) * 100;
+
+      setTodayStatistics({
+        consumed: caloriesConsumed,
+        percentage,
+        remaining: remainingCalories,
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const loadTodayFood = useCallback(async () => {
+    try {
+      const todayFoodResponse = await onGetTodayFood();
+      if (todayFoodResponse !== null) {
+        calculateTodayStatistics(todayFoodResponse);
+        setTodayFood(todayFoodResponse);
+      }
+    } catch (error) {
+      setTodayFood([]);
+      console.error(error);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadTodayFood().catch(null);
+    }, [])
+  );
+
   const handleAddCaloriesPress = () => {
     navigate("AddFood");
   };
@@ -25,6 +83,11 @@ const Home = () => {
           </TouchableOpacity>
         </View>
       </View>
+      <TodayCalories {...todayStatistics} />
+      <TodayMeals
+        foods={todayFood}
+        onCompleteAddRemove={() => loadTodayFood()}
+      />
     </View>
   );
 };

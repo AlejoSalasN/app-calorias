@@ -1,8 +1,32 @@
 import { Icon } from "@rneui/themed";
 import React from "react";
-import { StyleSheet, TouchableOpacity, View, Text } from "react-native";
+import { StyleSheet, TouchableOpacity, View, Text, Alert } from "react-native";
+import useFoodStorage from "../hooks/useFoodStorage";
 
-const MealItem = ({ calories, name, portion }) => {
+const MealItem = ({
+  calories,
+  name,
+  portion,
+  isAbleToAdd,
+  itemPosition,
+  onCompleteAddRemove,
+}) => {
+  const { onSaveTodayFood, onDeleteTodayFood } = useFoodStorage();
+
+  const handleIconPress = async () => {
+    try {
+      if (isAbleToAdd) {
+        await onSaveTodayFood({ calories, name, portion });
+        Alert.alert("Comida agregada al día");
+      } else {
+        await onDeleteTodayFood(itemPosition);
+        onCompleteAddRemove?.();
+      }
+    } catch (error) {
+      console.log(error);
+      Alert.alert("Comida no agregada");
+    }
+  };
   return (
     <View style={styles.container}>
       <View style={styles.leftContainer}>
@@ -10,8 +34,8 @@ const MealItem = ({ calories, name, portion }) => {
         <Text style={styles.portion}>{portion}</Text>
       </View>
       <View style={styles.rightConainer}>
-        <TouchableOpacity style={styles.button}>
-          <Icon name="add-circle-outline" />
+        <TouchableOpacity style={styles.button} onPress={handleIconPress}>
+          <Icon name={isAbleToAdd ? "add-circle-outline" : "close"} />
         </TouchableOpacity>
         <Text style={styles.calories}>{calories} KCal</Text>
       </View>

@@ -18,6 +18,7 @@ const AddFood = () => {
   const [visible, setVisible] = useState(false);
   const [foods, setFoods] = useState([]);
   const { onGetFood } = useFoodStorage();
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     loadFoods().catch(null);
@@ -39,6 +40,21 @@ const AddFood = () => {
     }
     setVisible(false);
   };
+
+  const handleSearchPress = async () => {
+    try {
+      const result = await onGetFood();
+      setFoods(
+        result.filter((item) =>
+          item.name.toLocalLowerCase().includes(search.toLocaleLowerCase())
+        )
+      );
+    } catch (error) {
+      console.error(error);
+      setFoods([]);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Header />
@@ -57,15 +73,27 @@ const AddFood = () => {
       </View>
       <View style={styles.searchContainer}>
         <View style={styles.searchLeftContainer}>
-          <TextInput placeholder="apples, pie, soda..." style={styles.input} />
+          <TextInput
+            placeholder="apples, pie, soda..."
+            style={styles.input}
+            value={search}
+            onChangeText={(text) => setSearch(text)}
+          />
         </View>
-        <TouchableOpacity style={styles.buttonSearch}>
+        <TouchableOpacity
+          style={styles.buttonSearch}
+          onPress={handleSearchPress}
+        >
           <Text style={{ fontSize: 14 }}>Search</Text>
         </TouchableOpacity>
       </View>
-      <ScrollView style={styles.content}>
+      <ScrollView>
         {foods?.map((meal) => (
-          <MealItem key={`my-meal-item-${meal.name}`} {...meal} />
+          <MealItem
+            key={`my-meal-item-${meal.name}`}
+            {...meal}
+            isAbleToAdd={true}
+          />
         ))}
       </ScrollView>
       <AddFoodModal visible={visible} onClose={handleModalClose} />
@@ -79,7 +107,6 @@ const styles = StyleSheet.create({
     padding: 12,
     backgroundColor: "#fff",
   },
-  content: {},
   addFoodContainer: {
     flexDirection: "row",
     alignItems: "center",
