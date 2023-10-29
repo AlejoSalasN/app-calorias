@@ -1,12 +1,6 @@
 import React, { useCallback, useState } from "react";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import {
-  View,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-} from "react-native";
+import { View, StyleSheet, Text, TouchableOpacity } from "react-native";
 import TodayCalories from "../components/TodayCalories";
 import TodayMeals from "../components/TodayMeals";
 import Header from "../components/Header";
